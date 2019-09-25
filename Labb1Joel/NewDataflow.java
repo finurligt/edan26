@@ -3,6 +3,8 @@ import java.util.ListIterator;
 import java.util.LinkedList;
 import java.util.ArrayList;
 import java.util.BitSet;
+import java.util.Collections;
+import java.util.List;
 
 class Random {
 	int	w;
@@ -48,14 +50,14 @@ class Vertex {
 		listed = state;
 	}
 
-	synchronized void reAdd(LinkedList<Vertex> worklist) {
+	synchronized void reAdd(List<Vertex> worklist) {
 		if(!listed){
 			worklist.add(this);
-			listed(true);
+			listed = true;
 		}
 	}
 
-	void computeIn(LinkedList<Vertex> worklist)
+	void computeIn(List<Vertex> worklist)
 	{
 		succ.forEach(succVertex -> {
 			synchronized(succVertex) {
@@ -66,6 +68,7 @@ class Vertex {
 		BitSet old = in;
 		
 		// in = use U (out - def)
+
 		synchronized (this){
 			in = new BitSet();
 			in.or(out);	
@@ -109,10 +112,10 @@ class Vertex {
 }
 
 class ParaThread extends Thread{
-	private LinkedList<Vertex> worklist;
+	private List<Vertex> worklist;
 	private Vertex u;
 
-	public ParaThread (LinkedList<Vertex> worklist){
+	public ParaThread (List<Vertex> worklist){
 		this.worklist = worklist;
 	}
 
@@ -121,9 +124,7 @@ class ParaThread extends Thread{
 			u = null;
 			try{
 				u = worklist.remove(0);
-			} catch (IndexOutOfBoundsException e) {
-				e.printStackTrace();
-			}
+			} catch (IndexOutOfBoundsException e) {}
 			if(u != null) {
 				u.setListed(false);
 				u.computeIn(worklist);
@@ -191,7 +192,7 @@ class Dataflow {
 	public static void liveness(Vertex vertex[], int nthread)
 	{
 		int			i;
-		LinkedList<Vertex>	worklist;
+		List<Vertex>	worklist;
 		ArrayList<ParaThread> threads = new ArrayList<>();
 		long			begin;
 		long			end;
@@ -199,10 +200,10 @@ class Dataflow {
 		System.out.println("computing liveness...");
 
 		begin = System.nanoTime();
-		worklist = new LinkedList<Vertex>();
+		worklist = Collections.synchronizedList(new LinkedList<Vertex>());
 
 		for (i = 0; i < vertex.length; ++i) {
-			worklist.addLast(vertex[i]);
+			worklist.add(vertex[i]);
 			vertex[i].listed = true;
 		}
 
@@ -216,7 +217,7 @@ class Dataflow {
 			try{
 				t.join();
 			} catch (Exception e){
-				e.printStackTrace();
+
 			}
 		}
 
