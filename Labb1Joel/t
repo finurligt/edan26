@@ -1,0 +1,11 @@
+
+
+S=10000
+V=1000
+U=4
+A=100
+T=4
+P=1
+
+javac Dataflow.java && java -Xmx2048M Dataflow $S $V $U $A $T $P > output1.txt
+javac NewDataFlow.java && java -Xmx2048M Dataflow $S $V $U $A $T $P > output2.txt
